@@ -51,3 +51,7 @@ services:
 ## Other
 To turn on detailed logging, add `DEBUG=true` to your `.env` file.
 
+## Don't have a Bitvavo account yet?
+If you want to support my work, register using [my link](https://bitvavo.com/invite?a=BF0BED4330)*. Thank you! <br>
+* *this gives me a bonus and you can trade up to €10,000 in cryptocurrencies without fees in the first week.*
+
