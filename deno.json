@@ -1,0 +1,18 @@
+{
+  "tasks": {
+    "dev": "deno run -A  --watch main.ts",
+    "prod": "deno run --allow-net --allow-env --allow-read --allow-sys main.ts"
+  },
+  "imports": {
+    "@nothing628/chalk": "jsr:@nothing628/chalk@^1.0.1",
+    "@std/assert": "jsr:@std/assert@1",
+    "bitvavo": "npm:bitvavo@^1.4.1"
+  },
+  "permissions": {
+    "net": true,
+    "env": true,
+    "read": true,
+    "write": true
+    
+  }
+}
