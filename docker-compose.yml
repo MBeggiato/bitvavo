@@ -1,0 +1,11 @@
+services:
+  deno-app:
+    image: ghcr.io/mbeggiato/bitvavo:main
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    command: [ "run", "--allow-net", "--allow-env", "--allow-read", "--allow-sys", "main.ts" ]
