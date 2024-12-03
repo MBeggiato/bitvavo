@@ -10,9 +10,9 @@ on:
     branches:
       - main
     # Publish semver tags as releases.
-    tags: [ 'v*.*.*' ]
+    tags: ["v*.*.*"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 env:
   # Use docker.io for Docker Hub if empty
@@ -20,10 +20,8 @@ env:
   # github.repository as <account>/<repo>
   IMAGE_NAME: ${{ github.repository }}
 
-
 jobs:
   build:
-
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -36,13 +34,42 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set up Git
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+
+      - name: Get current version
+        id: get_version
+        run: |
+          version=$(jq -r '.version' deno.json)
+          echo "Current version: $version"
+          echo "::set-output name=version::$version"
+
+      - name: Increment version
+        id: increment_version
+        run: |
+          version=${{ steps.get_version.outputs.version }}
+          IFS='.' read -r -a parts <<< "$version"
+          parts[2]=$((parts[2] + 1))
+          new_version="${parts[0]}.${parts[1]}.${parts[2]}"
+          echo "New version: $new_version"
+          jq --arg new_version "$new_version" '.version = $new_version' deno.json > tmp.$$.json && mv tmp.$$.json deno.json
+          echo "::set-output name=new_version::$new_version"
+
+      - name: Commit new version
+        run: |
+          git add deno.json
+          git commit -m "Increment version to ${{ steps.increment_version.outputs.new_version }}"
+          git push
+
       # Install the cosign tool except on PR
       # https://github.com/sigstore/cosign-installer
       - name: Install cosign
         if: github.event_name != 'pull_request'
         uses: sigstore/cosign-installer@59acb6260d9c0ba8f4a2f9d9b48431a222b68e20 #v3.5.0
         with:
-          cosign-release: 'v2.2.4'
+          cosign-release: "v2.2.4"
 
       # Set up BuildKit Docker container builder to be able to build
       # multi-platform images and export cache
@@ -67,6 +94,9 @@ jobs:
         uses: docker/metadata-action@96383f45573cb7f253c731d3b3ab81c87ef81934 # v5.0.0
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            ${{ steps.increment_version.outputs.new_version }}
+            latest
 
       # Build and push Docker image with Buildx (don't push on PR)
       # https://github.com/docker/build-push-action
@@ -92,6 +122,4 @@ jobs:
           # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-an-intermediate-environment-variable
           TAGS: ${{ steps.meta.outputs.tags }}
           DIGEST: ${{ steps.build-and-push.outputs.digest }}
-        # This step uses the identity token to provision an ephemeral certificate
-        # against the sigstore community Fulcio instance.
         run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}

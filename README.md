@@ -1,3 +1,4 @@
+![Workflow](https://github.com/MBeggiato/bitvavo/actions/workflows/docker-publish.yml/badge.svg)
 # Bitvavo
 This project is a Deno application that interacts with the Bitvavo API to fetch balance and price information for cryptocurrencies. It also provides a WebSocket server to send this information to connected clients.
 
