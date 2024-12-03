@@ -1,6 +1,6 @@
 import "jsr:@std/dotenv/load";
 import { debug, log, LogType } from "./util.ts";
-import { getBalance, getPrice, sendBalanceAndPrice } from "./api.ts";
+import { getBalance, getPrice, getValue, sendBalanceAndPrice } from "./api.ts";
 
 const APIKEY = Deno.env.get("APIKEY");
 const APISECRET = Deno.env.get("APISECRET");
@@ -13,42 +13,49 @@ if (!APIKEY || !APISECRET) {
 const PATHS = {
   BALANCE: "/api/balance",
   PRICE: "/api/price",
-  TOTAL: "/api/total",
-  ALL: "/api/all",
+  VALUE: "/api/value",
+  OVERVIEW: "/api/overview",
 };
 
 let interval: number | undefined;
 
 function handleGetRequest(url: URL): Promise<Response> {
-  switch (url.pathname) {
-    case PATHS.BALANCE:
-      return getBalance().then((balance) =>
-        new Response(JSON.stringify({ balance }), {
+
+  if (url.pathname.includes(PATHS.BALANCE)) {
+    const symbol = url.pathname.split("/")[3];
+    return getBalance(symbol).then((balance) =>
+      new Response(JSON.stringify({ balance }), {
+        headers: { "Content-Type": "application/json" },
+      })
+    );
+  } else if (url.pathname.includes(PATHS.VALUE)) {
+    const symbol = url.pathname.split("/")[3];
+    return getValue(symbol).then((value) =>
+      new Response(JSON.stringify({ value }), {
+        headers: { "Content-Type": "application/json" },
+      })
+    );
+  } else if (url.pathname.includes(PATHS.PRICE)) {
+    const symbol = url.pathname.split("/")[3];
+    return getPrice(symbol).then((price) =>
+      new Response(JSON.stringify({ price }), {
+        headers: { "Content-Type": "application/json" },
+      })
+    );
+  } else if (url.pathname.includes(PATHS.OVERVIEW)) {
+    const symbol = url.pathname.split("/")[3];
+    if (symbol) {
+      const price = getPrice(symbol);
+      const balance = getBalance(symbol);
+      const value = getValue(symbol);
+      return Promise.all([price, balance, value]).then(([price, balance, value]) =>
+        new Response(JSON.stringify({ price, balance, value }), {
           headers: { "Content-Type": "application/json" },
         })
       );
-    case PATHS.PRICE:
-      return getPrice().then((price) =>
-        new Response(JSON.stringify({ price }), {
-          headers: { "Content-Type": "application/json" },
-        })
-      );
-    case PATHS.TOTAL:
-      return Promise.all([getBalance(), getPrice()]).then(([balance, price]) =>
-        new Response(JSON.stringify((Number(balance) * Number(price)).toFixed(2)), {
-          headers: { "Content-Type": "application/json" },
-        })
-      );
-    case PATHS.ALL:
-      return Promise.all([getBalance(), getPrice()]).then(([balance, price]) => {
-        const total = (Number(balance) * Number(price)).toFixed(2) + " EUR";
-        return new Response(JSON.stringify({ balance, price, total }), {
-          headers: { "Content-Type": "application/json" },
-        });
-      });
-    default:
-      return Promise.resolve(new Response(null, { status: 404 }));
+    }
   }
+  return Promise.resolve(new Response(null, { status: 404 }));
 }
 
 function handleWebSocket(socket: WebSocket) {

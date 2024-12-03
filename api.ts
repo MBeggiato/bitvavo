@@ -37,10 +37,13 @@ export async function sendBalanceAndPrice(socket: WebSocket): Promise<void> {
     }
 }
 
-export async function getBalance(): Promise<string | undefined> {
+export async function getBalance(symbol: string = ""): Promise<BalanceResponse[] | BalanceResponse | undefined> {
     try {
-        const response: BalanceResponse[] = await b.balance();
-        return response[0].available;
+        const response = await b.balance();
+        if (symbol) {
+            return response.find((r: { symbol: string; }) => r.symbol === symbol);
+        }
+        return response;
     } catch (error) {
         if (error instanceof Error) {
             log(error.message, LogType.ERROR);
@@ -51,10 +54,33 @@ export async function getBalance(): Promise<string | undefined> {
     }
 }
 
-export async function getPrice(): Promise<string | undefined> {
+export async function getPrice(symbol: string = "BTC"): Promise<string | undefined> {
     try {
-        const response: PriceResponse = await b.tickerPrice({ market: "BTC-EUR" });
+        const response: PriceResponse = await b.tickerPrice({ market: symbol + "-EUR" });
         return response.price;
+    } catch (error) {
+        if (error instanceof Error) {
+            log(error.message, LogType.ERROR);
+        } else {
+            log(String(error), LogType.ERROR);
+        }
+        return undefined;
+    }
+}
+
+export async function getValue(symbol: string = ""): Promise<string | undefined> {
+    try {
+        const balance = await getBalance(symbol);
+        const price = await getPrice(symbol);
+        if (balance && price) {
+            if (Array.isArray(balance)) {
+                const totalAvailable = balance.reduce((acc, curr) => acc + Number(curr.available), 0);
+                return (totalAvailable * Number(price)).toFixed(2);
+            } else {
+                return (Number(balance?.available) * Number(price)).toFixed(2);
+            }
+        }
+        return undefined;
     } catch (error) {
         if (error instanceof Error) {
             log(error.message, LogType.ERROR);
