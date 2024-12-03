@@ -40,7 +40,7 @@ You can also run this project inside a Docker container with the following compo
 ```yml
 services:
   deno-app:
-    image: ghcr.io/mbeggiato/bitvavo:main
+    image: ghcr.io/mbeggiato/bitvavo:latest
     ports:
       - "8000:8000"
     env_file:
