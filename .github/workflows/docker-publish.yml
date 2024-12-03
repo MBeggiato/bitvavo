@@ -58,7 +58,12 @@ jobs:
           echo "::set-output name=new_version::$new_version"
 
       - name: Commit new version
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
         run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
           git add deno.json
           git commit -m "Increment version to ${{ steps.increment_version.outputs.new_version }}"
           git push
