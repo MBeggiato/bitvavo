@@ -1,4 +1,5 @@
-![Workflow](https://github.com/MBeggiato/bitvavo/actions/workflows/docker-publish.yml/badge.svg)
+![Workflow](https://github.com/MBeggiato/bitvavo/actions/workflows/docker-publish.yml/badge.svg)![Dynamic JSON Badge](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FMBeggiato%2Fbitvavo%2Frefs%2Fheads%2Fmain%2Fdeno.json&query=version&logo=github&label=Latest%3A&color=%2334CD57)
+
 # Bitvavo
 This project is a Deno application that interacts with the Bitvavo API to fetch balance and price information for cryptocurrencies. It also provides a WebSocket server to send this information to connected clients.
 
